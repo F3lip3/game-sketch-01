@@ -1,6 +1,14 @@
 import styled from 'styled-components/native';
 
-export const Plate = styled.View`
+interface IPlateProps {
+  size: number;
+}
+
+interface IHandlerProps {
+  size: number;
+}
+
+export const Plate = styled.View<IPlateProps>`
   align-items: center;
   justify-content: center;
 
@@ -10,7 +18,7 @@ export const Plate = styled.View`
   background-color: rgba(255, 255, 255, 0.3);
 `;
 
-export const Handler = styled.View`
+export const Handler = styled.View<IHandlerProps>`
   align-items: center;
   justify-content: center;
 
