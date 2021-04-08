@@ -25,8 +25,9 @@ const GamePad: React.FC<IGamePadProps> = ({
 
   const handlePanChange = useCallback(
     ({ x, y }) => {
+      const output = { direction: 'up', speed: 0 } as IGamePadOutput;
+
       if (x !== 0 && y !== 0) {
-        const output = {} as IGamePadOutput;
         if (Math.abs(x) > Math.abs(y)) {
           output.direction = x > 0 ? 'right' : 'left';
           output.speed = getSpeed({
@@ -42,8 +43,9 @@ const GamePad: React.FC<IGamePadProps> = ({
             maxLevel: maxSpeedLevel
           });
         }
-        onChange(output);
       }
+
+      onChange(output);
     },
     [maxSpeedLevel, onChange, size]
   );
