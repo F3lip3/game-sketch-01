@@ -1,7 +1,7 @@
 import React, { memo, useEffect, useState } from 'react';
 import { Image, ImageSourcePropType } from 'react-native';
 
-import { SpriteContainer, SpriteImage } from './styles';
+import { Info, SpriteContainer, SpriteImage } from './styles';
 
 export type Direction = 'up' | 'down' | 'left' | 'right';
 export type SpriteDirection = { [key in Direction]: number };
@@ -18,8 +18,6 @@ export interface SpriteProps {
   y: number;
   height?: number;
   width?: number;
-  futureX: number;
-  futureY: number;
   direction?: Direction;
 }
 
@@ -38,13 +36,7 @@ const directions: SpriteDirection = {
   up: 3
 };
 
-const Sprite: React.FC<SpriteProps> = ({
-  futureX,
-  futureY,
-  x,
-  y,
-  direction = 'down'
-}) => {
+const Sprite: React.FC<SpriteProps> = ({ x, y, direction = 'down' }) => {
   const [data, setData] = useState<SpriteSheetProps>({
     path: '../../assets/player01.png',
     rows: 4,
@@ -52,8 +44,6 @@ const Sprite: React.FC<SpriteProps> = ({
   });
 
   const [spriteProps, setSpriteProps] = useState<SpriteProps>({
-    futureX,
-    futureY,
     x,
     y,
     direction
@@ -88,16 +78,6 @@ const Sprite: React.FC<SpriteProps> = ({
   }, [data]);
 
   useEffect(() => {
-    setSpriteProps(currentProps => {
-      return {
-        ...currentProps,
-        futureX,
-        futureY
-      };
-    });
-  }, [futureX, futureY]);
-
-  useEffect(() => {
     setSpriteProps(currentProps => ({
       ...currentProps,
       x,
@@ -105,24 +85,20 @@ const Sprite: React.FC<SpriteProps> = ({
     }));
     setImageProps(currentProps => {
       let { step } = currentProps;
-      const finished = x === spriteProps.futureX && y === spriteProps.futureY;
-      if (finished) {
-        step = 1;
-      } else {
-        const stepSize =
-          currentProps.direction !== directions[direction] ||
-          ((direction === 'left' || direction === 'right') &&
-            x % Math.floor(currentProps.width / data.columns) === 0) ||
-          ((direction === 'down' || direction === 'up') &&
-            y % Math.floor(currentProps.height / data.columns) === 0)
-            ? 1
-            : 0;
 
-        if (step + stepSize >= data.columns) {
-          step = 0;
-        } else {
-          step += stepSize;
-        }
+      const stepSize =
+        currentProps.direction !== directions[direction] ||
+        ((direction === 'left' || direction === 'right') &&
+          x % Math.floor(currentProps.width / data.columns) === 0) ||
+        ((direction === 'down' || direction === 'up') &&
+          y % Math.floor(currentProps.height / data.columns) === 0)
+          ? 1
+          : 0;
+
+      if (step + stepSize >= data.columns) {
+        step = 0;
+      } else {
+        step += stepSize;
       }
 
       return {
@@ -131,12 +107,17 @@ const Sprite: React.FC<SpriteProps> = ({
         step
       };
     });
-  }, [x, y, direction, data.columns, spriteProps.futureX, spriteProps.futureY]);
+  }, [x, y, direction, data.columns]);
 
   return (
-    <SpriteContainer {...spriteProps}>
-      <SpriteImage {...imageProps} />
-    </SpriteContainer>
+    <>
+      <SpriteContainer {...spriteProps}>
+        <SpriteImage {...imageProps} />
+      </SpriteContainer>
+      <Info>
+        {x}, {y}
+      </Info>
+    </>
   );
 };
 

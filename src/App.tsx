@@ -48,8 +48,6 @@ const App: React.FC = () => {
           systems={[SpriteSystem]}
           entities={{
             player: {
-              futureX: 0,
-              futureY: 0,
               x: 0,
               y: 0,
               renderer: Sprite
@@ -59,7 +57,7 @@ const App: React.FC = () => {
           <StatusBar hidden />
         </GameEngine>
         <GamePad
-          maxSpeedLevel={3}
+          maxSpeedLevel={1}
           onChange={handleMovement}
           size={120}
           style={styles.gamepad}

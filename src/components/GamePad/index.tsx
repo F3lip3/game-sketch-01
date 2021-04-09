@@ -17,37 +17,43 @@ interface IGamePadProps extends ViewProps {
 
 const GamePad: React.FC<IGamePadProps> = ({
   size = 120,
-  maxSpeedLevel = 3,
+  maxSpeedLevel = 2,
   style,
   onChange
 }) => {
   const [pan] = useState(new Animated.ValueXY());
+  const [output, setOutput] = useState<IGamePadOutput>({
+    direction: 'down',
+    speed: 0
+  });
 
   const handlePanChange = useCallback(
     ({ x, y }) => {
-      const output = { direction: 'up', speed: 0 } as IGamePadOutput;
-
       if (x !== 0 && y !== 0) {
         if (Math.abs(x) > Math.abs(y)) {
-          output.direction = x > 0 ? 'right' : 'left';
-          output.speed = getSpeed({
-            value: Math.abs(x),
-            max: size / 2,
-            maxLevel: maxSpeedLevel
+          setOutput({
+            direction: x > 0 ? 'right' : 'left',
+            speed: getSpeed({
+              value: Math.abs(x),
+              max: size / 2,
+              maxLevel: maxSpeedLevel
+            })
           });
         } else {
-          output.direction = y > 0 ? 'down' : 'up';
-          output.speed = getSpeed({
-            value: Math.abs(y),
-            max: size / 2,
-            maxLevel: maxSpeedLevel
+          setOutput({
+            direction: y > 0 ? 'down' : 'up',
+            speed: getSpeed({
+              value: Math.abs(y),
+              max: size / 2,
+              maxLevel: maxSpeedLevel
+            })
           });
         }
+      } else {
+        setOutput(current => ({ ...current, speed: 0 }));
       }
-
-      onChange(output);
     },
-    [maxSpeedLevel, onChange, size]
+    [maxSpeedLevel, size]
   );
 
   const panResponder = useMemo(
@@ -79,6 +85,10 @@ const GamePad: React.FC<IGamePadProps> = ({
   useEffect(() => {
     pan.addListener(handlePanChange);
   }, [handlePanChange, pan]);
+
+  useEffect(() => {
+    onChange(output);
+  }, [onChange, output]);
 
   return (
     <Plate size={size} style={style}>

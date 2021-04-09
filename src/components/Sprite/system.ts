@@ -3,154 +3,113 @@ import { GameEngineSystem } from 'react-native-game-engine';
 
 import { SpriteProps } from '.';
 
-// interface SpriteMovementProps {
-//   buffer: {
-//     x: number;
-//     y: number;
-//   };
-//   step: {
-//     x: number;
-//     y: number;
-//   };
-// }
-
 type TEvent = {
   type: string;
-  speed?: number;
+  speed: number;
 };
 
-let player: SpriteProps;
-let last_event: TEvent;
+interface IMovementProps {
+  buffer: TEvent & { value: number };
+  event?: TEvent;
+  step_size: number;
+  haste: number;
+}
 
-const player_speeds = [0, 1, 2, 4, 8, 16];
+let player: SpriteProps;
+
+const movement: IMovementProps = {
+  buffer: {
+    speed: 0,
+    type: '',
+    value: 0
+  },
+  event: undefined,
+  step_size: 32,
+  haste: 1
+};
 
 const actions = {
-  move_down: (speed: number) => {
-    player.y += player_speeds[speed];
-    player.direction = 'down';
+  move_down: (speed: number): SpriteProps => {
+    return {
+      ...player,
+      y: player.y + speed,
+      direction: 'down'
+    };
   },
-  move_left: (speed: number) => {
-    player.x -= player_speeds[speed];
-    player.direction = 'left';
+  move_left: (speed: number): SpriteProps => {
+    return {
+      ...player,
+      x: player.x - speed,
+      direction: 'left'
+    };
   },
-  move_right: (speed: number) => {
-    player.x += player_speeds[speed];
-    player.direction = 'right';
+  move_right: (speed: number): SpriteProps => {
+    return {
+      ...player,
+      x: player.x + speed,
+      direction: 'right'
+    };
   },
-  move_up: (speed: number) => {
-    player.y -= player_speeds[speed];
-    player.direction = 'up';
+  move_up: (speed: number): SpriteProps => {
+    return {
+      ...player,
+      y: player.y - speed,
+      direction: 'up'
+    };
   }
+};
+
+const getSpeed = (index: number): number => {
+  const speeds = [0, 1, 2, 4, 8, 16];
+  return speeds[index];
 };
 
 const SpriteSystem: GameEngineSystem = (entities, { events }) => {
   player = entities.player;
 
+  // store movement event and speed
   if (events.length && player) {
-    const { type, speed = 0 }: TEvent = events.pop();
+    const { type, speed: index = 0 }: TEvent = events.pop();
     if (actions[type]) {
-      last_event = { type, speed };
-      if (speed) {
-        actions[type](speed);
-        return {
-          ...entities,
-          player
-        };
-      }
+      movement.event = {
+        speed: getSpeed(index),
+        type
+      };
+    } else {
+      movement.event.speed = 0;
     }
   }
 
-  if (last_event) {
-    const { type, speed } = last_event;
+  // destructured movement
+  const { buffer, event, step_size, haste } = movement;
+
+  // loop inside buffer to complete a full step
+  if (buffer.value > 0 && event) {
+    movement.buffer.value += buffer.speed * haste;
+    if (buffer.value >= step_size) {
+      movement.buffer.value = 0;
+    }
+    return {
+      ...entities,
+      player: actions[buffer.type](buffer.speed * haste)
+    };
+  }
+
+  // loop in last event if the use keeps gamepad in the same position
+  if (event) {
+    const { type, speed } = event;
     if (type && speed) {
-      actions[type](speed);
+      movement.buffer = {
+        type,
+        speed,
+        value: speed
+      };
       return {
         ...entities,
-        player
+        player: actions[type](speed * haste)
       };
     }
   }
-
-  // if (touches.length) console.info(touches);
-
-  // const { player } = entities;
-  // if (player) {
-  //   const touch = touches.find(_touch => _touch.type === 'end');
-
-  //   if (touch?.event) {
-  //     const futureX = Math.round(touch.event.pageX);
-  //     const futureY = Math.round(touch.event.pageY);
-  //     const remainderX = futureX % movementData.step.x;
-  //     const remainderY = futureY % movementData.step.y;
-
-  //     return {
-  //       ...entities,
-  //       player: {
-  //         ...player,
-  //         futureX: remainderX === 0 ? futureX : futureX - remainderX,
-  //         futureY: remainderY === 0 ? futureY : futureY - remainderY
-  //       }
-  //     };
-  //   }
-
-  //   let stepX = 0;
-  //   if (player.x !== player.futureX) {
-  //     stepX = movementData.speed * (player.x > player.futureX ? -1 : 1);
-  //   }
-
-  //   let stepY = 0;
-  //   if (player.y !== player.futureY) {
-  //     stepY = movementData.speed * (player.y > player.futureY ? -1 : 1);
-  //   }
-
-  //   if (stepX !== 0 || stepY !== 0) {
-  //     let distanceX = 0;
-  //     if (stepX !== 0) {
-  //       distanceX =
-  //         stepX > 0 ? player.futureX - player.x : player.x - player.futureX;
-  //     }
-
-  //     let distanceY = 0;
-  //     if (stepY !== 0) {
-  //       distanceY =
-  //         stepY > 0 ? player.futureY - player.y : player.y - player.futureY;
-  //     }
-
-  //     if (
-  //       distanceX > distanceY &&
-  //       movementData.buffer.x >= 0 &&
-  //       movementData.buffer.y === 0
-  //     ) {
-  //       movementData.buffer.x += movementData.speed;
-  //       if (movementData.buffer.x === movementData.step.x) {
-  //         movementData.buffer.x = 0;
-  //       }
-
-  //       return {
-  //         ...entities,
-  //         player: {
-  //           ...player,
-  //           x: player.x + stepX,
-  //           direction: stepX > 0 ? 'right' : 'left'
-  //         }
-  //       };
-  //     }
-
-  //     movementData.buffer.y += movementData.speed;
-  //     if (movementData.buffer.y === movementData.step.y) {
-  //       movementData.buffer.y = 0;
-  //     }
-
-  //     return {
-  //       ...entities,
-  //       player: {
-  //         ...player,
-  //         y: player.y + stepY,
-  //         direction: stepY > 0 ? 'down' : 'up'
-  //       }
-  //     };
-  //   }
-  // }
 
   return entities;
 };

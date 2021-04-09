@@ -29,3 +29,12 @@ export const SpriteImage = styled.Image<SpriteImageProps>`
   transform: translateX(${props => props.step * props.width * -1}px)
     translateY(${props => props.direction * props.height * -1}px);
 `;
+
+export const Info = styled.Text`
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+`;
